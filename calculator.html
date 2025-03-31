@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0EA5E9',
+                        secondary: '#64748B'
+                    },
+                    borderRadius: {
+                        'none': '0px',
+                        'sm': '4px',
+                        DEFAULT: '8px',
+                        'md': '12px',
+                        'lg': '16px',
+                        'xl': '20px',
+                        '2xl': '24px',
+                        '3xl': '32px',
+                        'full': '9999px',
+                        'button': '8px'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :where([class^="ri-"])::before { content: "\f3c2"; }
+        .calc-button {
+            @apply w-16 h-16 text-lg font-medium flex items-center justify-center cursor-pointer transition-all duration-200 !rounded-button;
+        }
+        .calc-button:hover {
+            filter: brightness(0.9);
+        }
+        .calc-button:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center">
+    <div class="w-[360px] bg-white shadow-xl rounded-xl p-6">
+        <div class="mb-4">
+            <div class="text-right text-gray-500 text-sm h-6" id="history"></div>
+            <div class="text-right text-3xl font-medium h-12 overflow-hidden" id="display">0</div>
+        </div>
+        
+        <div class="grid grid-cols-4 gap-3">
+            <div class="calc-button bg-gray-100 text-gray-700" onclick="clearAll()">AC</div>
+            <div class="calc-button bg-gray-100 text-gray-700" onclick="toggleSign()">+/-</div>
+            <div class="calc-button bg-gray-100 text-gray-700" onclick="percentage()">%</div>
+            <div class="calc-button bg-primary text-white" onclick="setOperator('÷')">÷</div>
+            
+            <div class="calc-button bg-gray-50 text-gray-900" onclick="appendNumber('7')">7</div>
+            <div class="calc-button bg-gray-50 text-gray-900" onclick="appendNumber('8')">8</div>
+            <div class="calc-button bg-gray-50 text-gray-900" onclick="appendNumber('9')">9</div>
+            <div class="calc-button bg-primary text-white" onclick="setOperator('×')">×</div>
+            
+            <div class="calc-button bg-gray-50 text-gray-900" onclick="appendNumber('4')">4</div>
+            <div class="calc-button bg-gray-50 text-gray-900" onclick="appendNumber('5')">5</div>
+            <div class="calc-button bg-gray-50 text-gray-900" onclick="appendNumber('6')">6</div>
+            <div class="calc-button bg-primary text-white" onclick="setOperator('-')">-</div>
+            
+            <div class="calc-button bg-gray-50 text-gray-900" onclick="appendNumber('1')">1</div>
+            <div class="calc-button bg-gray-50 text-gray-900" onclick="appendNumber('2')">2</div>
+            <div class="calc-button bg-gray-50 text-gray-900" onclick="appendNumber('3')">3</div>
+            <div class="calc-button bg-primary text-white" onclick="setOperator('+')">+</div>
+            
+            <div class="calc-button bg-gray-50 text-gray-900 col-span-2" onclick="appendNumber('0')">0</div>
+            <div class="calc-button bg-gray-50 text-gray-900" onclick="appendDecimal()">.</div>
+            <div class="calc-button bg-primary text-white" onclick="calculate()">=</div>
+        </div>
+    </div>
+
+    <script>
+        let currentNumber = '0';
+        let previousNumber = '';
+        let operation = '';
+        let shouldResetScreen = false;
+
+        const display = document.getElementById('display');
+        const history = document.getElementById('history');
+        function updateDisplay() {
+            display.textContent = currentNumber;
+        }
+
+        function appendNumber(number) {
+            if (currentNumber === '0' || shouldResetScreen) {
+                currentNumber = number;
+                shouldResetScreen = false;
+            } else {
+                currentNumber += number;
+            }
+            updateDisplay();
+        }
+
+        function clearAll() {
+            currentNumber = '0';
+            previousNumber = '';
+            operation = '';
+            history.textContent = '';
+            updateDisplay();
+        }
+
+        function toggleSign() {
+            currentNumber = (parseFloat(currentNumber) * -1).toString();
+            updateDisplay();
+        }
+
+        function percentage() {
+            currentNumber = (parseFloat(currentNumber) / 100).toString();
+            updateDisplay();
+        }
+        function appendDecimal() {
+            if (!currentNumber.includes('.')) {
+                currentNumber += '.';
+                updateDisplay();
+            }
+        }
+
+        function setOperator(op) {
+            if (operation !== '') {
+                calculate();
+            }
+            previousNumber = currentNumber;
+            operation = op;
+            history.textContent = `${previousNumber} ${operation}`;
+            shouldResetScreen = true;
+        }
+
+        function calculate() {
+            if (operation === '' || shouldResetScreen) return;
+            
+            const prev = parseFloat(previousNumber);
+            const current = parseFloat(currentNumber);
+            let result;
+            switch(operation) {
+                case '+':
+                    result = prev + current;
+                    break;
+                case '-':
+                    result = prev - current;
+                    break;
+                case '×':
+                    result = prev * current;
+                    break;
+                case '÷':
+                    result = prev / current;
+                    break;
+                default:
+                    return;
+            }
+
+            history.textContent = `${previousNumber} ${operation} ${currentNumber} =`;
+            currentNumber = result.toString();
+            operation = '';
+            updateDisplay();
+            shouldResetScreen = true;
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key >= '0' && event.key <= '9') appendNumber(event.key);
+            if (event.key === '.') appendDecimal();
+            if (event.key === '=' || event.key === 'Enter') calculate();
+            if (event.key === 'Escape') clearAll();
+            if (event.key === '+') setOperator('+');
+            if (event.key === '-') setOperator('-');
+            if (event.key === '*') setOperator('×');
+            if (event.key === '/') {
+                event.preventDefault();
+                setOperator('÷');
+            }
+        });
+    </script>
+</body>
+</html>
